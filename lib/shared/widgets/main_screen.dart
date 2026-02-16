@@ -15,54 +15,104 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  int _previousIndex = 0;
+  // Total non-archived inbox emails (matches the 4 hardcoded emails in InboxStreamScreen)
+  final int _inboxCount = 4;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    InboxStreamScreen(),
-    CalendarScreen(),
-    ChatbotScreen(),
-  ];
+  void _navigateToTab(int index) {
+    if (index == _currentIndex) return;
+    setState(() {
+      _previousIndex = _currentIndex;
+      _currentIndex = index;
+    });
+  }
+
+  Widget _screenForIndex(int index) {
+    switch (index) {
+      case 0:
+        return HomeScreen(
+          key: const ValueKey(0),
+          onNavigateToTab: _navigateToTab,
+          inboxCount: _inboxCount,
+        );
+      case 1:
+        return const InboxStreamScreen(key: ValueKey(1));
+      case 2:
+        return const CalendarScreen(key: ValueKey(2));
+      case 3:
+        return const ChatbotScreen(key: ValueKey(3));
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final goingForward = _currentIndex > _previousIndex;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: _screens,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              // Determine direction based on key comparison
+              final isIncoming = child.key == ValueKey(_currentIndex);
+              final beginOffset = isIncoming
+                  ? Offset(goingForward ? 1.0 : -1.0, 0.0)
+                  : Offset(goingForward ? -1.0 : 1.0, 0.0);
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: beginOffset,
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            },
+            child: _screenForIndex(_currentIndex),
           ),
-          // Floating bottom nav bar
+          // Bottom nav bar
           Positioned(
-            bottom: 24,
-            left: 40,
-            right: 40,
-            child: _buildFloatingNavBar(),
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildBottomNavBar(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFloatingNavBar() {
+  Widget _buildBottomNavBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(9999),
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(50),
+          topRight: Radius.circular(50),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 30,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
           ),
         ],
-        border: Border.all(
-          color: AppColors.slate100,
-          width: 1,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.slate100,
+            width: 1,
+          ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: EdgeInsets.only(
+        left: 32,
+        right: 32,
+        top: 16,
+        bottom: MediaQuery.of(context).padding.bottom + 12,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -103,7 +153,7 @@ class _MainScreenState extends State<MainScreen> {
   }) {
     final isActive = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () => _navigateToTab(index),
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,

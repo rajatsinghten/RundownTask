@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/router/app_router.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final void Function(int)? onNavigateToTab;
+  final int inboxCount;
+
+  const HomeScreen({super.key, this.onNavigateToTab, this.inboxCount = 0});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -221,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             // Floating Add Task button
             Positioned(
-              bottom: 90,
+              bottom: MediaQuery.of(context).padding.bottom + 90,
               right: 24,
               child: GestureDetector(
                 onTap: _showAddTaskSheet,
@@ -282,7 +286,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, AppRouter.profile);
+            },
             icon: const Icon(
               Icons.account_circle_outlined,
               size: 30,
@@ -338,56 +344,59 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'INBOX',
-                  style: GoogleFonts.workSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSlate400,
-                    letterSpacing: 2,
+          child: GestureDetector(
+            onTap: () => widget.onNavigateToTab?.call(1),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '12',
-                      style: GoogleFonts.workSans(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSlate800,
-                      ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'INBOX',
+                    style: GoogleFonts.workSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSlate400,
+                      letterSpacing: 2,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'new',
-                      style: GoogleFonts.workSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primarySoft,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        widget.inboxCount.toString().padLeft(2, '0'),
+                        style: GoogleFonts.workSans(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSlate800,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 4),
+                      Text(
+                        'new',
+                        style: GoogleFonts.workSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primarySoft,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

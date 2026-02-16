@@ -68,7 +68,7 @@ class InboxStreamScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '12 unread',
+                  '4 unread',
                   style: GoogleFonts.dmMono(
                     fontSize: 13,
                     color: AppColors.textSecondary,
