@@ -2,8 +2,190 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<Map<String, dynamic>> _tasks = [
+    {'title': 'Review Pull Request #402', 'time': 'Today, 10:00 AM', 'isDone': false},
+    {'title': 'Deploy Staging Build', 'time': 'Today, 11:30 AM', 'isDone': false},
+    {'title': 'Client Sync Notes', 'time': 'Today, 2:00 PM', 'isDone': false},
+    {'title': 'Update Security Policy', 'time': 'Today, 4:45 PM', 'isDone': false},
+    {'title': 'Team Retrospective', 'time': 'Today, 5:30 PM', 'isDone': false},
+  ];
+
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _timeController.dispose();
+    super.dispose();
+  }
+
+  int get _dueCount => _tasks.where((t) => !t['isDone']).length;
+
+  void _toggleTask(int index) {
+    setState(() {
+      _tasks[index]['isDone'] = !_tasks[index]['isDone'];
+    });
+  }
+
+  void _addTask(String title, String time) {
+    if (title.trim().isEmpty) return;
+    setState(() {
+      _tasks.add({
+        'title': title.trim(),
+        'time': time.trim().isEmpty ? 'No time set' : time.trim(),
+        'isDone': false,
+      });
+    });
+  }
+
+  void _showAddTaskSheet() {
+    _titleController.clear();
+    _timeController.clear();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.gray300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'NEW TASK',
+                  style: GoogleFonts.workSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSlate400,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _titleController,
+                  autofocus: true,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSlate800,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Task title...',
+                    hintStyle: GoogleFonts.jetBrainsMono(
+                      fontSize: 14,
+                      color: AppColors.textSlate300,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.slate50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _timeController,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSlate600,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Today, 3:00 PM',
+                    hintStyle: GoogleFonts.jetBrainsMono(
+                      fontSize: 13,
+                      color: AppColors.textSlate300,
+                    ),
+                    prefixIcon: const Icon(Icons.schedule, size: 20, color: AppColors.textSlate400),
+                    filled: true,
+                    fillColor: AppColors.slate50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _addTask(_titleController.text, _timeController.text);
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Add Task',
+                      style: GoogleFonts.workSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,24 +193,56 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: Column(
+        child: Stack(
           children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 120),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      _buildStatCards(),
-                      const SizedBox(height: 24),
-                      _buildTimelineHeader(),
-                      const SizedBox(height: 12),
-                      _buildTimelineList(),
+            Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 120),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          _buildStatCards(),
+                          const SizedBox(height: 24),
+                          _buildTimelineHeader(),
+                          const SizedBox(height: 12),
+                          _buildTimelineList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Floating Add Task button
+            Positioned(
+              bottom: 90,
+              right: 24,
+              child: GestureDetector(
+                onTap: _showAddTaskSheet,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
                     ],
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    size: 28,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -111,7 +325,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '05',
+                  _dueCount.toString().padLeft(2, '0'),
                   style: GoogleFonts.workSans(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
@@ -213,70 +427,82 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildTimelineList() {
-    final tasks = [
-      {'title': 'Review Pull Request #402', 'time': 'Today, 10:00 AM'},
-      {'title': 'Deploy Staging Build', 'time': 'Today, 11:30 AM'},
-      {'title': 'Client Sync Notes', 'time': 'Today, 2:00 PM'},
-      {'title': 'Update Security Policy', 'time': 'Today, 4:45 PM'},
-      {'title': 'Team Retrospective', 'time': 'Today, 5:30 PM'},
-    ];
-
     return Column(
-      children: tasks.map((task) => _buildTaskItem(task)).toList(),
+      children: List.generate(
+        _tasks.length,
+        (index) => _buildTaskItem(index),
+      ),
     );
   }
 
-  Widget _buildTaskItem(Map<String, String> task) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+  Widget _buildTaskItem(int index) {
+    final task = _tasks[index];
+    final bool isDone = task['isDone'] as bool;
+
+    return GestureDetector(
+      onTap: () => _toggleTask(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDone ? AppColors.slate50 : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDone ? 0.01 : 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: isDone ? AppColors.gray200 : AppColors.gray50,
           ),
-        ],
-        border: Border.all(color: AppColors.gray50),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.gray300,
-                width: 2,
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDone ? AppColors.primary : Colors.transparent,
+                border: Border.all(
+                  color: isDone ? AppColors.primary : AppColors.gray300,
+                  width: 2,
+                ),
+              ),
+              child: isDone
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                task['title']!,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDone ? AppColors.textSlate300 : AppColors.textSlate800,
+                  letterSpacing: -0.3,
+                  decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                  decorationColor: AppColors.textSlate300,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              task['title']!,
+            const SizedBox(width: 16),
+            Text(
+              task['time']!,
               style: GoogleFonts.jetBrainsMono(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSlate800,
-                letterSpacing: -0.3,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isDone ? AppColors.textSlate300 : AppColors.textSlate400,
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            task['time']!,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSlate400,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
