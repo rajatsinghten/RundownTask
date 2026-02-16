@@ -14,7 +14,7 @@ class InboxStreamScreen extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 120),
@@ -38,7 +38,7 @@ class InboxStreamScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -46,14 +46,12 @@ class InboxStreamScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.all_inbox, color: AppColors.primarySoft, size: 26),
-              const SizedBox(width: 12),
               Text(
-                'Inbox Stream',
-                style: GoogleFonts.dmMono(
-                  fontSize: 20,
+                'RunDown',
+                style: GoogleFonts.workSans(
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textMain,
+                  color: AppColors.textSlate900,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -61,26 +59,30 @@ class InboxStreamScreen extends StatelessWidget {
           ),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.gray100,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '4 unread',
-                  style: GoogleFonts.dmMono(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(
+                  Icons.swap_vert,
+                  color: AppColors.textSlate400,
+                  size: 26,
                 ),
               ),
-              const SizedBox(width: 8),
               IconButton(
                 onPressed: () {},
                 icon: const Icon(
                   Icons.filter_list,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSlate400,
+                  size: 26,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRouter.profile);
+                },
+                icon: const Icon(
+                  Icons.account_circle_outlined,
+                  size: 30,
+                  color: AppColors.textSlate400,
                 ),
               ),
             ],

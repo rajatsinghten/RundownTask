@@ -265,15 +265,6 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              Container(
-                width: 6,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(9999),
-                ),
-              ),
-              const SizedBox(width: 12),
               Text(
                 'RunDown',
                 style: GoogleFonts.workSans(
