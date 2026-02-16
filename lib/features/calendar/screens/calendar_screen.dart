@@ -1,9 +1,202 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/models/task_model.dart';
+import 'package:intl/intl.dart';
 
-class CalendarScreen extends StatelessWidget {
-  const CalendarScreen({super.key});
+class CalendarScreen extends StatefulWidget {
+  final List<Task> tasks;
+  final void Function(String) onToggleTask;
+  final void Function(String, String, DateTime) onAddTask;
+
+  const CalendarScreen({
+    super.key,
+    required this.tasks,
+    required this.onToggleTask,
+    required this.onAddTask,
+  });
+
+  @override
+  State<CalendarScreen> createState() => _CalendarScreenState();
+}
+
+class _CalendarScreenState extends State<CalendarScreen> {
+  DateTime _selectedDate = DateTime.now();
+  DateTime _focusedMonth = DateTime.now();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _timeController.dispose();
+    super.dispose();
+  }
+
+  void _onDaySelected(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+    });
+  }
+
+  void _onMonthChanged(int delta) {
+    setState(() {
+      _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + delta, 1);
+    });
+  }
+
+  bool _isSameDay(DateTime d1, DateTime d2) {
+    return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
+  }
+
+  List<Task> get _scheduledTasks {
+    return widget.tasks.where((t) => _isSameDay(t.date, _selectedDate)).toList();
+  }
+
+  void _showAddTaskSheet() {
+    _titleController.clear();
+    _timeController.clear();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.gray300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'NEW TASK',
+                  style: GoogleFonts.workSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSlate400,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _titleController,
+                  autofocus: true,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSlate800,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Task title...',
+                    hintStyle: GoogleFonts.jetBrainsMono(
+                      fontSize: 14,
+                      color: AppColors.textSlate300,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.slate50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _timeController,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSlate600,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 3:00 PM',
+                    hintStyle: GoogleFonts.jetBrainsMono(
+                      fontSize: 13,
+                      color: AppColors.textSlate300,
+                    ),
+                    prefixIcon: const Icon(Icons.schedule, size: 20, color: AppColors.textSlate400),
+                    filled: true,
+                    fillColor: AppColors.slate50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.gray200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_titleController.text.isNotEmpty) {
+                        final timeText = _timeController.text.isEmpty ? 'All Day' : _timeController.text;
+                        widget.onAddTask(_titleController.text, timeText, _selectedDate);
+                        Navigator.pop(ctx);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'CREATE TASK',
+                      style: GoogleFonts.workSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +217,8 @@ class CalendarScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildCalendarMonthHeader(),
+                          const SizedBox(height: 16),
                           _buildCalendarGrid(),
                           const SizedBox(height: 32),
                           _buildScheduledHeader(),
@@ -36,25 +231,32 @@ class CalendarScreen extends StatelessWidget {
                 ),
               ],
             ),
-            // FAB
+            // Floating Add Task button (Matched with HomeScreen)
             Positioned(
-              bottom: 100,
+              bottom: MediaQuery.of(context).padding.bottom + 90,
               right: 24,
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.blue500,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.blue500.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+              child: GestureDetector(
+                onTap: _showAddTaskSheet,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    size: 28,
+                    color: Colors.white,
+                  ),
                 ),
-                child: const Icon(Icons.add, color: Colors.white, size: 28),
               ),
             ),
           ],
@@ -65,89 +267,86 @@ class CalendarScreen extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
               Text(
-                'October 2023',
+                'RunDown',
                 style: GoogleFonts.workSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textSlate900,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                'WEEK 42',
-                style: GoogleFonts.workSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                  letterSpacing: 1,
-                ),
-              ),
             ],
           ),
-          // Profile avatar
-          Stack(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.slate200,
-                  border: Border.all(color: AppColors.slate200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.person,
-                  size: 24,
-                  color: AppColors.textSlate400,
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: AppColors.red500,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.background,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, AppRouter.profile);
+            },
+            icon: const Icon(
+              Icons.account_circle_outlined,
+              size: 30,
+              color: AppColors.textSlate400,
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildCalendarMonthHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              DateFormat('MMMM yyyy').format(_focusedMonth),
+              style: GoogleFonts.workSans(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSlate900,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () => _onMonthChanged(-1),
+              icon: const Icon(Icons.chevron_left, color: AppColors.textSlate400),
+            ),
+            IconButton(
+              onPressed: () => _onMonthChanged(1),
+              icon: const Icon(Icons.chevron_right, color: AppColors.textSlate400),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildCalendarGrid() {
     final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    // Previous month trailing days (25-30)
-    final prevMonthDays = [25, 26, 27, 28, 29, 30];
-    // Current month days 1-31
-    final currentMonthDays = List.generate(31, (i) => i + 1);
-    // Dates with dot indicators
-    final dottedDays = {3, 10, 20, 25};
-    const selectedDay = 18;
+    
+    // Calculate days
+    final firstDayOfMonth = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
+    final lastDayOfMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1, 0);
+    
+    // weekday is 1-7 (Mon-Sun)
+    // We want to align Mon at index 0.
+    final firstWeekday = firstDayOfMonth.weekday; // 1 (Mon) to 7 (Sun)
+    final leadingPadding = firstWeekday - 1;
+    
+    final daysInMonth = lastDayOfMonth.day;
+    final lastDayOfPrevMonth = DateTime(_focusedMonth.year, _focusedMonth.month, 0).day;
 
     return Column(
       children: [
@@ -172,60 +371,54 @@ class CalendarScreen extends StatelessWidget {
         const SizedBox(height: 16),
         // Calendar grid
         ..._buildCalendarRows(
-          prevMonthDays,
-          currentMonthDays,
-          dottedDays,
-          selectedDay,
+          leadingPadding,
+          lastDayOfPrevMonth,
+          daysInMonth,
         ),
       ],
     );
   }
 
-  List<Widget> _buildCalendarRows(
-    List<int> prevMonthDays,
-    List<int> currentMonthDays,
-    Set<int> dottedDays,
-    int selectedDay,
-  ) {
+  List<Widget> _buildCalendarRows(int leadingPadding, int lastDayOfPrevMonth, int daysInMonth) {
     final rows = <Widget>[];
-    // Each row has 7 cells
-    // Row 1: 25, 26, 27, 28, 29, 30 (prev month) + 1
-    // Row 2: 2-8
-    // Row 3: 9-15
-    // Row 4: 16-22
-    // Row 5: 23-29
-    // Row 6: 30-31
-
-    // Build all cells in order
     final allCells = <Widget>[];
 
     // Previous month days
-    for (final day in prevMonthDays) {
-      allCells.add(_buildDayCell(day, isPrevMonth: true));
-    }
-
-    // Current month days
-    for (final day in currentMonthDays) {
+    for (var i = leadingPadding - 1; i >= 0; i--) {
       allCells.add(_buildDayCell(
-        day,
-        isSelected: day == selectedDay,
-        hasDot: dottedDays.contains(day),
+        lastDayOfPrevMonth - i,
+        isDimmed: true,
       ));
     }
 
-    // Build rows of 7
+    // Current month days
+    for (var i = 1; i <= daysInMonth; i++) {
+      final date = DateTime(_focusedMonth.year, _focusedMonth.month, i);
+      final hasTasks = widget.tasks.any((t) => _isSameDay(t.date, date));
+      allCells.add(_buildDayCell(
+        i,
+        isSelected: _isSameDay(date, _selectedDate),
+        hasDot: hasTasks,
+        onTap: () => _onDaySelected(date),
+      ));
+    }
+
+    // Next month days to fill grid
+    final remainingCells = 42 - allCells.length; // 6 rows of 7
+    for (var i = 1; i <= remainingCells; i++) {
+      allCells.add(_buildDayCell(
+        i,
+        isDimmed: true,
+      ));
+    }
+
+    // Split into rows of 7
     for (var i = 0; i < allCells.length; i += 7) {
-      final end = (i + 7 > allCells.length) ? allCells.length : i + 7;
-      final rowCells = allCells.sublist(i, end);
-      // Pad remaining cells
-      while (rowCells.length < 7) {
-        rowCells.add(const SizedBox(height: 40));
-      }
       rows.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
-            children: rowCells.map((cell) => Expanded(child: cell)).toList(),
+            children: allCells.sublist(i, i + 7).map((cell) => Expanded(child: cell)).toList(),
           ),
         ),
       );
@@ -236,68 +429,76 @@ class CalendarScreen extends StatelessWidget {
 
   Widget _buildDayCell(
     int day, {
-    bool isPrevMonth = false,
+    bool isDimmed = false,
     bool isSelected = false,
     bool hasDot = false,
+    VoidCallback? onTap,
   }) {
-    return SizedBox(
-      height: 40,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (isSelected)
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.blue500,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.blue200,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  '$day',
-                  style: GoogleFonts.workSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 40,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected)
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.blue500,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.blue200,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    '$day',
+                    style: GoogleFonts.workSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
+              )
+            else
+              Text(
+                '$day',
+                style: GoogleFonts.workSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: isDimmed
+                      ? AppColors.textSlate300
+                      : AppColors.textSlate600,
+                ),
               ),
-            )
-          else
-            Text(
-              '$day',
-              style: GoogleFonts.workSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: isPrevMonth
-                    ? AppColors.textSlate300
-                    : AppColors.textSlate600,
+            if (hasDot && !isSelected)
+              Container(
+                margin: const EdgeInsets.only(top: 2),
+                width: 4,
+                height: 4,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-          if (hasDot && !isSelected)
-            Container(
-              margin: const EdgeInsets.only(top: 2),
-              width: 4,
-              height: 4,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-            ),
-        ],
+            if (!hasDot && !isSelected)
+              const SizedBox(height: 6),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildScheduledHeader() {
+    final count = _scheduledTasks.length;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -323,7 +524,7 @@ class CalendarScreen extends StatelessWidget {
             ],
           ),
           child: Text(
-            '3 tasks',
+            '$count task${count == 1 ? '' : 's'}',
             style: GoogleFonts.workSans(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -336,124 +537,117 @@ class CalendarScreen extends StatelessWidget {
   }
 
   Widget _buildScheduledTasks() {
-    final tasks = [
-      {
-        'title': 'Deploy backend to Staging',
-        'time': 'Today, 10:00 AM',
-        'isPrimary': true,
-        'done': false,
-      },
-      {
-        'title': 'Team Sync & Standup',
-        'time': 'Today, 11:30 AM',
-        'isPrimary': false,
-        'done': false,
-      },
-      {
-        'title': 'Review PR #402 (Auth Module)',
-        'time': 'Today, 02:00 PM',
-        'isPrimary': false,
-        'done': false,
-      },
-      {
-        'title': 'Morning Coffee',
-        'time': 'Today, 08:00 AM',
-        'isPrimary': false,
-        'done': true,
-      },
-    ];
-
+    final tasks = _scheduledTasks;
+    if (tasks.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Column(
+            children: [
+              Icon(Icons.calendar_today_outlined, size: 48, color: AppColors.slate200),
+              const SizedBox(height: 16),
+              Text(
+                'No tasks scheduled for this day',
+                style: GoogleFonts.workSans(
+                  fontSize: 14,
+                  color: AppColors.textSlate400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Column(
       children: tasks.map((task) => _buildTaskItem(task)).toList(),
     );
   }
 
-  Widget _buildTaskItem(Map<String, dynamic> task) {
-    final isDone = task['done'] as bool;
-    final isPrimary = task['isPrimary'] as bool;
+  Widget _buildTaskItem(Task task) {
+    final isDone = task.isDone;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDone ? AppColors.slate50 : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.slate100),
-        boxShadow: isDone
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-      ),
-      child: Opacity(
-        opacity: isDone ? 0.7 : 1.0,
-        child: Row(
-          children: [
-            // Checkbox
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDone ? AppColors.primary : Colors.transparent,
-                border: Border.all(
-                  color: isDone ? AppColors.primary : AppColors.textSlate300,
-                ),
-              ),
-              child: isDone
-                  ? const Icon(Icons.check, size: 14, color: Colors.white)
-                  : null,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task['title'] as String,
-                    style: GoogleFonts.workSans(
-                      fontSize: 14,
-                      fontWeight: isDone ? FontWeight.w500 : FontWeight.w600,
-                      color: isDone
-                          ? AppColors.textSlate500
-                          : AppColors.textSlate800,
-                      decoration:
-                          isDone ? TextDecoration.lineThrough : null,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 14,
-                        color: isPrimary && !isDone
-                            ? AppColors.primary
-                            : AppColors.textSlate400,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        task['time'] as String,
-                        style: GoogleFonts.workSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isPrimary && !isDone
-                              ? AppColors.primary
-                              : AppColors.textSlate400,
-                        ),
-                      ),
-                    ],
+    return GestureDetector(
+      onTap: () => widget.onToggleTask(task.id),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDone ? AppColors.slate50 : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.slate100),
+          boxShadow: isDone
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
                   ),
                 ],
+        ),
+        child: Opacity(
+          opacity: isDone ? 0.7 : 1.0,
+          child: Row(
+            children: [
+              // Checkbox
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDone ? AppColors.primary : Colors.transparent,
+                  border: Border.all(
+                    color: isDone ? AppColors.primary : AppColors.textSlate300,
+                  ),
+                ),
+                child: isDone
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
+                    : null,
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      style: GoogleFonts.workSans(
+                        fontSize: 14,
+                        fontWeight: isDone ? FontWeight.w500 : FontWeight.w600,
+                        color: isDone
+                            ? AppColors.textSlate500
+                            : AppColors.textSlate800,
+                        decoration:
+                            isDone ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule,
+                          size: 14,
+                          color: AppColors.textSlate400,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          task.timeText,
+                          style: GoogleFonts.workSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSlate400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+

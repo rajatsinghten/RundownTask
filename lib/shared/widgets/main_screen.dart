@@ -5,6 +5,7 @@ import '../../features/home/screens/home_screen.dart';
 import '../../features/inbox/screens/inbox_stream_screen.dart';
 import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/chatbot/screens/chatbot_screen.dart';
+import '../../core/models/task_model.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,11 +20,64 @@ class _MainScreenState extends State<MainScreen> {
   // Total non-archived inbox emails (matches the 4 hardcoded emails in InboxStreamScreen)
   final int _inboxCount = 4;
 
+  final List<Task> _tasks = [
+    Task(
+      id: '1',
+      title: 'Review Pull Request #402',
+      timeText: '10:00 AM',
+      date: DateTime.now(),
+    ),
+    Task(
+      id: '2',
+      title: 'Deploy Staging Build',
+      timeText: '11:30 AM',
+      date: DateTime.now(),
+    ),
+    Task(
+      id: '3',
+      title: 'Client Sync Notes',
+      timeText: '2:00 PM',
+      date: DateTime.now(),
+    ),
+    Task(
+      id: '4',
+      title: 'Update Security Policy',
+      timeText: '4:45 PM',
+      date: DateTime.now(),
+    ),
+    Task(
+      id: '5',
+      title: 'Team Retrospective',
+      timeText: '5:30 PM',
+      date: DateTime.now(),
+    ),
+  ];
+
   void _navigateToTab(int index) {
     if (index == _currentIndex) return;
     setState(() {
       _previousIndex = _currentIndex;
       _currentIndex = index;
+    });
+  }
+
+  void _toggleTask(String id) {
+    setState(() {
+      final taskIndex = _tasks.indexWhere((t) => t.id == id);
+      if (taskIndex != -1) {
+        _tasks[taskIndex].isDone = !_tasks[taskIndex].isDone;
+      }
+    });
+  }
+
+  void _addTask(String title, String timeText, DateTime date) {
+    setState(() {
+      _tasks.add(Task(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: title,
+        timeText: timeText,
+        date: date,
+      ));
     });
   }
 
@@ -34,11 +88,19 @@ class _MainScreenState extends State<MainScreen> {
           key: const ValueKey(0),
           onNavigateToTab: _navigateToTab,
           inboxCount: _inboxCount,
+          tasks: _tasks,
+          onToggleTask: _toggleTask,
+          onAddTask: _addTask,
         );
       case 1:
         return const InboxStreamScreen(key: ValueKey(1));
       case 2:
-        return const CalendarScreen(key: ValueKey(2));
+        return CalendarScreen(
+          key: const ValueKey(2),
+          tasks: _tasks,
+          onToggleTask: _toggleTask,
+          onAddTask: _addTask,
+        );
       case 3:
         return const ChatbotScreen(key: ValueKey(3));
       default:

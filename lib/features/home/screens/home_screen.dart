@@ -2,26 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/models/task_model.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(int)? onNavigateToTab;
   final int inboxCount;
+  final List<Task> tasks;
+  final void Function(String) onToggleTask;
+  final void Function(String, String, DateTime) onAddTask;
 
-  const HomeScreen({super.key, this.onNavigateToTab, this.inboxCount = 0});
+  const HomeScreen({
+    super.key,
+    this.onNavigateToTab,
+    this.inboxCount = 0,
+    required this.tasks,
+    required this.onToggleTask,
+    required this.onAddTask,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<Map<String, dynamic>> _tasks = [
-    {'title': 'Review Pull Request #402', 'time': 'Today, 10:00 AM', 'isDone': false},
-    {'title': 'Deploy Staging Build', 'time': 'Today, 11:30 AM', 'isDone': false},
-    {'title': 'Client Sync Notes', 'time': 'Today, 2:00 PM', 'isDone': false},
-    {'title': 'Update Security Policy', 'time': 'Today, 4:45 PM', 'isDone': false},
-    {'title': 'Team Retrospective', 'time': 'Today, 5:30 PM', 'isDone': false},
-  ];
-
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
 
@@ -32,24 +35,17 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  int get _dueCount => _tasks.where((t) => !t['isDone']).length;
-
-  void _toggleTask(int index) {
-    setState(() {
-      _tasks[index]['isDone'] = !_tasks[index]['isDone'];
-    });
+  // Filter tasks for today
+  List<Task> get _todayTasks {
+    final now = DateTime.now();
+    return widget.tasks.where((t) {
+      return t.date.year == now.year &&
+             t.date.month == now.month &&
+             t.date.day == now.day;
+    }).toList();
   }
 
-  void _addTask(String title, String time) {
-    if (title.trim().isEmpty) return;
-    setState(() {
-      _tasks.add({
-        'title': title.trim(),
-        'time': time.trim().isEmpty ? 'No time set' : time.trim(),
-        'isDone': false,
-      });
-    });
-  }
+  int get _dueCount => _todayTasks.where((t) => !t.isDone).length;
 
   void _showAddTaskSheet() {
     _titleController.clear();
@@ -134,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.textSlate600,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'e.g. Today, 3:00 PM',
+                    hintText: 'e.g. 3:00 PM',
                     hintStyle: GoogleFonts.jetBrainsMono(
                       fontSize: 13,
                       color: AppColors.textSlate300,
@@ -163,7 +159,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      _addTask(_titleController.text, _timeController.text);
+                      if (_titleController.text.trim().isNotEmpty) {
+                        widget.onAddTask(
+                          _titleController.text.trim(),
+                          _timeController.text.trim().isEmpty ? 'No time' : _timeController.text.trim(),
+                          DateTime.now(),
+                        );
+                      }
                       Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(
@@ -427,20 +429,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTimelineList() {
+    final tasks = _todayTasks;
     return Column(
       children: List.generate(
-        _tasks.length,
-        (index) => _buildTaskItem(index),
+        tasks.length,
+        (index) => _buildTaskItem(tasks[index]),
       ),
     );
   }
 
-  Widget _buildTaskItem(int index) {
-    final task = _tasks[index];
-    final bool isDone = task['isDone'] as bool;
+  Widget _buildTaskItem(Task task) {
+    final bool isDone = task.isDone;
 
     return GestureDetector(
-      onTap: () => _toggleTask(index),
+      onTap: () => widget.onToggleTask(task.id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
@@ -481,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                task['title']!,
+                task.title,
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -494,7 +496,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 16),
             Text(
-              task['time']!,
+              task.timeText,
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -507,3 +509,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
