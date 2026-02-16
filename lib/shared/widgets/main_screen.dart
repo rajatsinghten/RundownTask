@@ -197,8 +197,8 @@ class _MainScreenState extends State<MainScreen> {
             index: 2,
           ),
           _buildNavItem(
-            icon: Icons.smart_toy_outlined,
-            activeIcon: Icons.smart_toy,
+            icon: Icons.chat_bubble_outline_rounded,
+            activeIcon: Icons.chat_bubble_rounded,
             label: 'Chatbot',
             index: 3,
           ),
