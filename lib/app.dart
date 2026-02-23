@@ -11,7 +11,7 @@ class RundownTaskApp extends StatelessWidget {
       title: 'Rundown Task',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppRouter.main,
+      initialRoute: AppRouter.login,
       onGenerateRoute: AppRouter.generateRoute,
     );
   }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/main_screen.dart';
 import '../../features/inbox/screens/inbox_triage_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
 
 class AppRouter {
   AppRouter._();
 
+  static const String login = '/login';
   static const String main = '/';
   static const String inboxTriage = '/inbox-triage';
   static const String profile = '/profile';
@@ -33,6 +35,8 @@ class AppRouter {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case login:
+        return _slideRoute(const LoginScreen(), settings);
       case main:
         return _slideRoute(const MainScreen(), settings);
       case inboxTriage:
@@ -55,7 +59,7 @@ class AppRouter {
         return _slideRoute(
           Scaffold(
             body: Center(
-              child: Text('No route defined for \${settings.name}'),
+              child: Text('No route defined for ${settings.name}'),
             ),
           ),
           settings,

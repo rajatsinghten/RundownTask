@@ -113,37 +113,27 @@ class _MainScreenState extends State<MainScreen> {
     final goingForward = _currentIndex > _previousIndex;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) {
-              // Determine direction based on key comparison
-              final isIncoming = child.key == ValueKey(_currentIndex);
-              final beginOffset = isIncoming
-                  ? Offset(goingForward ? 1.0 : -1.0, 0.0)
-                  : Offset(goingForward ? -1.0 : 1.0, 0.0);
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: beginOffset,
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              );
-            },
-            child: _screenForIndex(_currentIndex),
-          ),
-          // Bottom nav bar
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomNavBar(),
-          ),
-        ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          // Determine direction based on key comparison
+          final isIncoming = child.key == ValueKey(_currentIndex);
+          final beginOffset = isIncoming
+              ? Offset(goingForward ? 1.0 : -1.0, 0.0)
+              : Offset(goingForward ? -1.0 : 1.0, 0.0);
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: beginOffset,
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          );
+        },
+        child: _screenForIndex(_currentIndex),
       ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -173,7 +163,7 @@ class _MainScreenState extends State<MainScreen> {
         left: 32,
         right: 32,
         top: 16,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
+        bottom: MediaQuery.of(context).viewPadding.bottom + 12,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
