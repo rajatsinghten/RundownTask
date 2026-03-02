@@ -37,7 +37,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           Expanded(child: _buildMessageList()),
           _buildQuickActions(),
           _buildInputBar(),
-          SizedBox(height: bottomNavHeight + 8),
+          SizedBox(height: bottomNavHeight - 32),
         ],
       ),
     );

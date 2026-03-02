@@ -166,7 +166,7 @@ class _MainScreenState extends State<MainScreen> {
         padding: EdgeInsets.only(
           left: 32,
           right: 32,
-          top: 16,
+          top: 24,
           // Add enough bottom padding to cover system nav bar on all Android devices
           bottom: (bottomPadding > 0 ? bottomPadding : 16) + 16,
         ),

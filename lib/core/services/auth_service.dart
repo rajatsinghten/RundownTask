@@ -2,6 +2,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:http/http.dart' as http;
+import 'package:msal_flutter/msal_flutter.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TODO: Fill in your Azure App Registration details before shipping.
+// Register at: https://portal.azure.com → Azure Active Directory → App registrations
+// ─────────────────────────────────────────────────────────────────────────────
+const String _msalClientId = 'YOUR_AZURE_CLIENT_ID'; // ← Replace this
+const String _msalTenantId = 'common';               // 'common' = personal + work accounts
+// iOS redirect URI:  msauth.com.example.rundownTask://auth  (set in Info.plist)
+// Android redirect: msauth://com.example.rundown_task/<base64-signature>  (set in AndroidManifest.xml)
 
 /// A custom HTTP client that injects the Google Sign-In auth headers
 /// into all requests, so `googleapis` can use it automatically.
@@ -25,7 +35,19 @@ class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // Lazily initialised MSAL client
+  PublicClientApplication? _msalClient;
+
   User? get currentUser => _auth.currentUser;
+
+  /// Lazy-init the MSAL PublicClientApplication
+  Future<PublicClientApplication> _getMsalClient() async {
+    _msalClient ??= await PublicClientApplication.createPublicClientApplication(
+      _msalClientId,
+      authority: 'https://login.microsoftonline.com/$_msalTenantId',
+    );
+    return _msalClient!;
+  }
 
   /// Starts the Google Sign-In flow and authenticates with Firebase
   Future<UserCredential?> signInWithGoogle() async {
@@ -63,10 +85,35 @@ class AuthService {
     }
   }
 
-  /// Signs out of both Google and Firebase
+  /// Starts the Microsoft (MSAL) interactive sign-in flow.
+  /// Returns the access token String on success, or null on failure/cancel.
+  Future<String?> signInWithMicrosoft() async {
+    try {
+      final client = await _getMsalClient();
+      final token = await client.acquireToken(
+        ['User.Read', 'openid', 'profile', 'email'],
+      );
+      return token;
+    } on MsalUserCancelledException {
+      print('Microsoft Sign-In cancelled by user.');
+      return null;
+    } on MsalException catch (e) {
+      print('Microsoft Sign-In error: ${e.errorMessage}');
+      return null;
+    } catch (e) {
+      print('Unexpected Microsoft Sign-In error: $e');
+      return null;
+    }
+  }
+
+  /// Signs out of Google, Firebase, and Microsoft (MSAL)
   Future<void> signOut() async {
     await GoogleSignIn.instance.signOut();
     await _auth.signOut();
+    try {
+      final client = await _getMsalClient();
+      await client.logout();
+    } catch (_) {}
   }
 
   /// Returns an authenticated GmailApi client for the current Google Session

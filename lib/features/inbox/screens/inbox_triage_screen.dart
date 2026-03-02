@@ -298,50 +298,61 @@ class InboxTriageScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons() {
-    return SizedBox(
-      height: 64,
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.gray100,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {},
-                  child: Row(
+    return Row(
+      children: [
+        // Archive / Ignore button
+        Expanded(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {},
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.slate200,
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.slate100,
                           shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                            ),
-                          ],
+                          border: Border.all(
+                            color: AppColors.slate200,
+                            width: 2,
+                          ),
                         ),
                         child: const Icon(
-                          Icons.close,
-                          size: 18,
-                          color: AppColors.textSlate400,
+                          Icons.archive_outlined,
+                          size: 22,
+                          color: AppColors.textSlate500,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(height: 10),
                       Text(
-                        'Ignore',
+                        'Archive',
                         style: GoogleFonts.workSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textSlate600,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],
@@ -350,48 +361,57 @@ class InboxTriageScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {},
-                  child: Row(
+        ),
+        const SizedBox(width: 14),
+        // Taskify / Add to Task button
+        Expanded(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {},
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.4),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: Colors.white24,
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                            width: 2,
+                          ),
                         ),
                         child: const Icon(
-                          Icons.check,
-                          size: 18,
+                          Icons.check_circle_outline_rounded,
+                          size: 24,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(height: 10),
                       Text(
-                        'Add to Task',
+                        'Taskify',
                         style: GoogleFonts.workSans(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],
@@ -400,8 +420,8 @@ class InboxTriageScreen extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

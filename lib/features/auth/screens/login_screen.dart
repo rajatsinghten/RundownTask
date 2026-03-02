@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 icon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               
               // Password Field
               _buildTextField(
@@ -212,6 +212,72 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               
+              const SizedBox(height: 16),
+
+              // Microsoft Login Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final account = await AuthService().signInWithMicrosoft();
+                    if (account != null) {
+                      if (context.mounted) {
+                        Navigator.pushReplacementNamed(context, AppRouter.main);
+                      }
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Microsoft Sign-In failed or was canceled.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: AppColors.slate200),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Microsoft four-square logo drawn with coloured squares
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 2,
+                          crossAxisSpacing: 2,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: const [
+                            ColoredBox(color: Color(0xFFF25022)), // red
+                            ColoredBox(color: Color(0xFF7FBA00)), // green
+                            ColoredBox(color: Color(0xFF00A4EF)), // blue
+                            ColoredBox(color: Color(0xFFFFB900)), // yellow
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Continue with Microsoft',
+                        style: GoogleFonts.workSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textMain,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 48),
               
               // Sign Up Link

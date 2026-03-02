@@ -233,7 +233,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             // Floating Add Task button (Matched with HomeScreen)
             Positioned(
-              bottom: MediaQuery.of(context).padding.bottom + 90,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
               right: 24,
               child: GestureDetector(
                 onTap: _showAddTaskSheet,
