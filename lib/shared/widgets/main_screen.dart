@@ -138,61 +138,67 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildBottomNavBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(50),
-          topRight: Radius.circular(50),
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+    return ColoredBox(
+      // Fill the system nav bar area on Android with white to eliminate black bar
+      color: Colors.white,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(50),
+            topRight: Radius.circular(50),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+          border: Border(
+            top: BorderSide(
+              color: AppColors.slate100,
+              width: 1,
+            ),
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(
-            color: AppColors.slate100,
-            width: 1,
-          ),
+        padding: EdgeInsets.only(
+          left: 32,
+          right: 32,
+          top: 16,
+          // Add enough bottom padding to cover system nav bar on all Android devices
+          bottom: (bottomPadding > 0 ? bottomPadding : 16) + 16,
         ),
-      ),
-      padding: EdgeInsets.only(
-        left: 32,
-        right: 32,
-        top: 16,
-        bottom: MediaQuery.of(context).viewPadding.bottom + 12,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildNavItem(
-            icon: Icons.check_circle_outline,
-            activeIcon: Icons.check_circle,
-            label: 'To Do',
-            index: 0,
-          ),
-          _buildNavItem(
-            icon: Icons.inbox_outlined,
-            activeIcon: Icons.inbox,
-            label: 'Inbox',
-            index: 1,
-          ),
-          _buildNavItem(
-            icon: Icons.calendar_today_outlined,
-            activeIcon: Icons.calendar_today,
-            label: 'Calendar',
-            index: 2,
-          ),
-          _buildNavItem(
-            icon: Icons.chat_bubble_outline_rounded,
-            activeIcon: Icons.chat_bubble_rounded,
-            label: 'Chatbot',
-            index: 3,
-          ),
-        ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildNavItem(
+              icon: Icons.check_circle_outline,
+              activeIcon: Icons.check_circle,
+              label: 'To Do',
+              index: 0,
+            ),
+            _buildNavItem(
+              icon: Icons.inbox_outlined,
+              activeIcon: Icons.inbox,
+              label: 'Inbox',
+              index: 1,
+            ),
+            _buildNavItem(
+              icon: Icons.calendar_today_outlined,
+              activeIcon: Icons.calendar_today,
+              label: 'Calendar',
+              index: 2,
+            ),
+            _buildNavItem(
+              icon: Icons.chat_bubble_outline_rounded,
+              activeIcon: Icons.chat_bubble_rounded,
+              label: 'Chatbot',
+              index: 3,
+            ),
+          ],
+        ),
       ),
     );
   }

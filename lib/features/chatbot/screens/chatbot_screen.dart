@@ -27,19 +27,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Height of bottom nav bar: icon(26) + label + paddings ≈ 80px + system bar
+    final bottomNavHeight = 80.0 + MediaQuery.of(context).viewPadding.bottom;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(child: _buildMessageList()),
-            _buildQuickActions(),
-            _buildInputBar(),
-            const SizedBox(height: 140), // Ensures input clears bottom nav hit-test area
-          ],
-        ),
+      body: Column(
+        children: [
+          SafeArea(bottom: false, child: _buildHeader()),
+          Expanded(child: _buildMessageList()),
+          _buildQuickActions(),
+          _buildInputBar(),
+          SizedBox(height: bottomNavHeight + 8),
+        ],
       ),
     );
   }
@@ -280,7 +279,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     vertical: 12,
                   ),
                 ),
-                autofocus: true,
+                autofocus: false,
                 onSubmitted: (text) => _sendMessage(text),
               ),
             ),
