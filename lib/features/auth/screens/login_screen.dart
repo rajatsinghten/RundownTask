@@ -24,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() {
-    // Basic validation
     if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
       Navigator.pushReplacementNamed(context, AppRouter.main);
     } else {
@@ -40,329 +39,372 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome Back',
-                style: GoogleFonts.workSans(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textMain,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Sign in to your account',
-                style: GoogleFonts.workSans(
-                  fontSize: 16,
-                  color: AppColors.textSlate400,
-                ),
-              ),
-              const SizedBox(height: 48),
-              
-              // Email Field
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
-              
-              // Password Field
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                icon: Icons.lock_outline,
-                obscureText: !_isPasswordVisible,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                    color: AppColors.textSlate400,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Forgot Password?',
-                    style: GoogleFonts.workSans(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Scrollable content
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 64),
+
+                  // ── Logo ────────────────────────────────────────────────
+                  Center(
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Rundown',
+                            style: GoogleFonts.workSans(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
+
+                  const SizedBox(height: 40),
+
+                  // ── Heading ─────────────────────────────────────────────
+                  Text(
                     'Login',
                     style: GoogleFonts.workSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Divider
-              Row(
-                children: [
-                  Expanded(child: Divider(color: AppColors.slate200)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'OR',
-                      style: GoogleFonts.workSans(
+
+                  const SizedBox(height: 28),
+
+                  // ── Email Field ─────────────────────────────────────────
+                  _buildLabel('Email'),
+                  const SizedBox(height: 8),
+                  _buildInputField(
+                    controller: _emailController,
+                    hint: 'Enter your email',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Password Field ──────────────────────────────────────
+                  _buildLabel('Password'),
+                  const SizedBox(height: 8),
+                  _buildInputField(
+                    controller: _passwordController,
+                    hint: '••••••••',
+                    icon: Icons.lock_outline,
+                    obscureText: !_isPasswordVisible,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                         color: AppColors.textSlate400,
-                        fontWeight: FontWeight.w500,
+                        size: 20,
                       ),
+                      onPressed: () {
+                        setState(() => _isPasswordVisible = !_isPasswordVisible);
+                      },
                     ),
                   ),
-                  Expanded(child: Divider(color: AppColors.slate200)),
-                ],
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Google Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    // Handle Google Login
-                    final credential = await AuthService().signInWithGoogle();
-                    if (credential != null) {
-                      if (context.mounted) {
-                        Navigator.pushReplacementNamed(context, AppRouter.main);
-                      }
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Google Sign-In failed or was canceled.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: AppColors.slate200),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
-                        height: 24,
-                        width: 24,
-                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.blue, size: 30),
+
+                  const SizedBox(height: 8),
+
+                  // Forgot Password – left-aligned
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () {},
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Continue with Google',
+                      child: Text(
+                        'Forgot Password?',
                         style: GoogleFonts.workSans(
-                          fontSize: 16,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textMain,
+                          color: AppColors.primary,
                         ),
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ── Login Button ────────────────────────────────────────
+                  SizedBox(
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Login',
+                        style: GoogleFonts.workSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ── OR Divider ──────────────────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: AppColors.gray200, thickness: 1)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Text(
+                          'or',
+                          style: GoogleFonts.workSans(
+                            fontSize: 13,
+                            color: AppColors.textSlate400,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: AppColors.gray200, thickness: 1)),
                     ],
                   ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
 
-              // Microsoft Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final account = await AuthService().signInWithMicrosoft();
-                    if (account != null) {
-                      if (context.mounted) {
-                        Navigator.pushReplacementNamed(context, AppRouter.main);
+                  const SizedBox(height: 20),
+
+                  // ── Continue with Google ────────────────────────────────
+                  _buildSocialButton(
+                    onPressed: () async {
+                      final credential = await AuthService().signInWithGoogle();
+                      if (credential != null) {
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, AppRouter.main);
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Google Sign-In failed or was canceled.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       }
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Microsoft Sign-In failed or was canceled.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: AppColors.slate200),
-                    ),
-                    elevation: 0,
+                    },
+                    icon: _googleIcon(),
+                    label: 'Continue with Gmail',
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Microsoft four-square logo drawn with coloured squares
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: GridView.count(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 2,
-                          crossAxisSpacing: 2,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: const [
-                            ColoredBox(color: Color(0xFFF25022)), // red
-                            ColoredBox(color: Color(0xFF7FBA00)), // green
-                            ColoredBox(color: Color(0xFF00A4EF)), // blue
-                            ColoredBox(color: Color(0xFFFFB900)), // yellow
+
+                  const SizedBox(height: 12),
+
+                  // ── Continue with Microsoft ─────────────────────────────
+                  _buildSocialButton(
+                    onPressed: () async {
+                      final token = await AuthService().signInWithMicrosoft();
+                      if (token != null) {
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, AppRouter.main);
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Microsoft Sign-In failed or was canceled.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    icon: _microsoftIcon(),
+                    label: 'Continue with Microsoft',
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ── Sign Up Link ────────────────────────────────────────
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "Don't have an account? ",
+                              style: GoogleFonts.workSans(
+                                fontSize: 14,
+                                color: AppColors.textSlate500,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Signup',
+                              style: GoogleFonts.workSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Continue with Microsoft',
-                        style: GoogleFonts.workSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textMain,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 48),
-              
-              // Sign Up Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: GoogleFonts.workSans(
-                      color: AppColors.textSlate400,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Sign Up',
-                      style: GoogleFonts.workSans(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 48),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.workSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF1A1A1A),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
     required TextEditingController controller,
-    required String label,
+    required String hint,
     required IconData icon,
     bool obscureText = false,
     TextInputType? keyboardType,
     Widget? suffixIcon,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.workSans(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textMain,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: GoogleFonts.workSans(
+          fontSize: 15,
+          color: const Color(0xFF1A1A1A),
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.workSans(
+            fontSize: 15,
+            color: AppColors.textSlate400,
+          ),
+          prefixIcon: Icon(icon, color: AppColors.textSlate400, size: 20),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required VoidCallback onPressed,
+    required Widget icon,
+    required String label,
+  }) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.slate100),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        child: Row(
+          children: [
+            icon,
+            Expanded(
+              child: Center(
+                child: Text(
+                  label,
+                  style: GoogleFonts.workSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            style: GoogleFonts.workSans(
-              color: AppColors.textMain,
             ),
-            decoration: InputDecoration(
-              hintText: 'Enter your $label.toLowerCase()',
-              hintStyle: GoogleFonts.workSans(
-                color: AppColors.textSlate400,
-              ),
-              prefixIcon: Icon(icon, color: AppColors.textSlate400),
-              suffixIcon: suffixIcon,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            ),
-          ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _googleIcon() {
+    return Image.network(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
+      height: 22,
+      width: 22,
+      errorBuilder: (_, __, ___) =>
+          const Icon(Icons.g_mobiledata, color: Color(0xFFEA4335), size: 26),
+    );
+  }
+
+  Widget _microsoftIcon() {
+    return SizedBox(
+      width: 22,
+      height: 22,
+      child: CustomPaint(painter: _MicrosoftLogoPainter()),
     );
   }
 }
+
+class _MicrosoftLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gap = size.width * 0.09;
+    final sq = (size.width - gap) / 2;
+    final colors = [
+      const Color(0xFFF25022), // top-left  red
+      const Color(0xFF7FBA00), // top-right green
+      const Color(0xFF00A4EF), // bottom-left blue
+      const Color(0xFFFFB900), // bottom-right yellow
+    ];
+    final rects = [
+      Rect.fromLTWH(0, 0, sq, sq),
+      Rect.fromLTWH(sq + gap, 0, sq, sq),
+      Rect.fromLTWH(0, sq + gap, sq, sq),
+      Rect.fromLTWH(sq + gap, sq + gap, sq, sq),
+    ];
+    final paint = Paint()..style = PaintingStyle.fill;
+    for (int i = 0; i < 4; i++) {
+      canvas.drawRect(rects[i], paint..color = colors[i]);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

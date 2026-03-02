@@ -1,0 +1,5 @@
+-keep class org.bouncycastle.** { *; }
+-dontwarn org.bouncycastle.**
+-keep class com.nimbusds.** { *; }
+-dontwarn com.nimbusds.**
+-dontwarn edu.umd.cs.findbugs.annotations.**
