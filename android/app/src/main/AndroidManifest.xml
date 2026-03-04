@@ -35,7 +35,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="msauth"
-                    android:host="com.example.rundown_task"
+                    android:host="app.rundown.task"
                     android:path="/YOUR_AZURE_CLIENT_ID_BASE64_SIGNATURE" />
             </intent-filter>
         </activity>

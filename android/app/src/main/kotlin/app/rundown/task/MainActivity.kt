@@ -1,4 +1,4 @@
-package com.example.rundown_task
+package app.rundown.task
 
 import android.os.Bundle
 import androidx.core.view.WindowCompat

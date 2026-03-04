@@ -10,8 +10,8 @@ import 'package:msal_flutter/msal_flutter.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 const String _msalClientId = 'YOUR_AZURE_CLIENT_ID'; // ← Replace this
 const String _msalTenantId = 'common';               // 'common' = personal + work accounts
-// iOS redirect URI:  msauth.com.example.rundownTask://auth  (set in Info.plist)
-// Android redirect: msauth://com.example.rundown_task/<base64-signature>  (set in AndroidManifest.xml)
+// iOS redirect URI:  msauth.app.rundown.task://auth  (set in Info.plist)
+// Android redirect: msauth://app.rundown.task/<base64-signature>  (set in AndroidManifest.xml)
 
 /// A custom HTTP client that injects the Google Sign-In auth headers
 /// into all requests, so `googleapis` can use it automatically.

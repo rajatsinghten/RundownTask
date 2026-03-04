@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "741222572973",
+    "project_id": "rundowntask",
+    "storage_bucket": "rundowntask.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741222572973:android:84f6f08f73b21904a73724",
+        "android_client_info": {
+          "package_name": "app.rundown.task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQhh1oTXhTwgoaNzmDexjyPNoUtm0s2GY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
