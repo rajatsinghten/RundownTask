@@ -69,6 +69,15 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- Google Sign-In reversed client ID -->
+				<string>com.googleusercontent.apps.741222572973-hraqhgvbu4j444164gukosarvavq9pgt</string>
+			</array>
+		</dict>
+		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<!-- MSAL redirect URI: msauth.<your-bundle-id> -->

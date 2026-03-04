@@ -2,19 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:http/http.dart' as http;
-import 'package:msal_flutter/msal_flutter.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TODO: Fill in your Azure App Registration details before shipping.
-// Register at: https://portal.azure.com → Azure Active Directory → App registrations
-// ─────────────────────────────────────────────────────────────────────────────
-const String _msalClientId = 'YOUR_AZURE_CLIENT_ID'; // ← Replace this
-const String _msalTenantId = 'common';               // 'common' = personal + work accounts
-// iOS redirect URI:  msauth.app.rundown.task://auth  (set in Info.plist)
-// Android redirect: msauth://app.rundown.task/<base64-signature>  (set in AndroidManifest.xml)
-
-/// A custom HTTP client that injects the Google Sign-In auth headers
-/// into all requests, so `googleapis` can use it automatically.
+/// A custom HTTP client that injects auth headers into all requests,
+/// so `googleapis` can use it automatically.
 class GoogleAuthClient extends http.BaseClient {
   final Map<String, String> _headers;
   final http.Client _client = http.Client();
@@ -28,114 +18,125 @@ class GoogleAuthClient extends http.BaseClient {
 }
 
 class AuthService {
-  // Singleton pattern is useful for services
+  // Singleton
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  /// Lazily access FirebaseAuth to avoid accessing it before Firebase.initializeApp()
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
-  // Lazily initialised MSAL client
-  PublicClientApplication? _msalClient;
+  /// List of scopes required by the application
+  static const List<String> scopes = <String>[
+    'email',
+    gmail.GmailApi.gmailReadonlyScope,
+  ];
+
+  /// The currently authenticated Google account (after sign-in).
+  GoogleSignInAccount? _googleUser;
 
   User? get currentUser => _auth.currentUser;
+  GoogleSignInAccount? get googleUser => _googleUser;
 
-  /// Lazy-init the MSAL PublicClientApplication
-  Future<PublicClientApplication> _getMsalClient() async {
-    _msalClient ??= await PublicClientApplication.createPublicClientApplication(
-      _msalClientId,
-      authority: 'https://login.microsoftonline.com/$_msalTenantId',
-    );
-    return _msalClient!;
+  /// Initialize the GoogleSignIn singleton. Call this once at app startup.
+  Future<void> initializeGoogleSignIn() async {
+    try {
+      // The serverClientId is the Web client ID from Firebase/Google Cloud Console.
+      // It's required to get the idToken for Firebase Auth on Android.
+      await GoogleSignIn.instance.initialize(
+        serverClientId: '741222572973-amfv89qim6eo8i3lk4hb78ngr48eu76n.apps.googleusercontent.com',
+      );
+      // Listen for authentication events to keep _googleUser in sync
+      GoogleSignIn.instance.authenticationEvents.listen((event) {
+        switch (event) {
+          case GoogleSignInAuthenticationEventSignIn():
+            _googleUser = event.user;
+          case GoogleSignInAuthenticationEventSignOut():
+            _googleUser = null;
+        }
+      });
+      // Removed attemptLightweightAuthentication() so it doesn't auto-prompt 
+      // the user immediately on startup.
+    } catch (e) {
+      print('GoogleSignIn initialization warning: $e');
+    }
   }
 
-  /// Starts the Google Sign-In flow and authenticates with Firebase
+  /// Starts the Google Sign-In flow and authenticates with Firebase.
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
-      final GoogleSignInAccount? account = await GoogleSignIn.instance.authenticate(
-        scopeHint: [gmail.GmailApi.gmailReadonlyScope],
-      );
+      // Trigger the interactive authentication flow
+      final GoogleSignInAccount? account =
+          await GoogleSignIn.instance.authenticate();
 
       if (account == null) {
         // The user canceled the sign-in
         return null;
       }
 
-      // Obtain the auth details
-      final GoogleSignInAuthentication googleAuth = await account.authentication;
+      _googleUser = account;
 
-      // To securely sign in with Firebase, we need the ID token. Sometimes the access token is also requested.
-      // With google_sign_in 7.0+, access tokens must be obtained via the authorization client.
-      final authzClient = account.authorizationClient;
-      final authz = await authzClient.authorizationForScopes([]);
+      // Get the ID token for Firebase auth
+      final GoogleSignInAuthentication googleAuth =
+          await account.authentication;
+
+      // Get access token via authorization for Firebase credential
+      // Note: We MUST pass non-empty scopes here to avoid IllegalArgumentException on Android
+      final GoogleSignInClientAuthorization? authz = await account
+          .authorizationClient
+          .authorizationForScopes(scopes);
       final String? accessToken = authz?.accessToken;
 
-      // Create a new credential
+      // Create a Firebase credential
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Once signed in, return the UserCredential
+      // Sign in to Firebase
       return await _auth.signInWithCredential(credential);
     } catch (e) {
       print('Error during Google Sign-In: $e');
-      return null;
+      rethrow; // Rethrow so the UI can show the exact error
     }
   }
 
-  /// Starts the Microsoft (MSAL) interactive sign-in flow.
-  /// Returns the access token String on success, or null on failure/cancel.
-  Future<String?> signInWithMicrosoft() async {
-    try {
-      final client = await _getMsalClient();
-      final token = await client.acquireToken(
-        ['User.Read', 'openid', 'profile', 'email'],
-      );
-      return token;
-    } on MsalUserCancelledException {
-      print('Microsoft Sign-In cancelled by user.');
-      return null;
-    } on MsalException catch (e) {
-      print('Microsoft Sign-In error: ${e.errorMessage}');
-      return null;
-    } catch (e) {
-      print('Unexpected Microsoft Sign-In error: $e');
-      return null;
-    }
-  }
-
-  /// Signs out of Google, Firebase, and Microsoft (MSAL)
+  /// Signs out of Google and Firebase.
   Future<void> signOut() async {
-    await GoogleSignIn.instance.signOut();
-    await _auth.signOut();
     try {
-      final client = await _getMsalClient();
-      await client.logout();
+      await GoogleSignIn.instance.disconnect();
     } catch (_) {}
+    await _auth.signOut();
+    _googleUser = null;
   }
 
-  /// Returns an authenticated GmailApi client for the current Google Session
+  /// Returns an authenticated GmailApi client for the current Google session.
+  /// Will request Gmail read-only scope if not already granted.
   Future<gmail.GmailApi?> getGmailApi() async {
     try {
-      final authClient = GoogleSignIn.instance.authorizationClient;
-      // Authorize to get the Gmail Scopes
-      final authz = await authClient.authorizeScopes([gmail.GmailApi.gmailReadonlyScope]);
-      
-      final token = authz.accessToken;
-      
-      final authHeaders = {
-        'Authorization': 'Bearer $token',
-        'X-Goog-AuthUser': '0',
-      };
-      
-      final client = GoogleAuthClient(authHeaders);
-      
+      final user = _googleUser;
+      if (user == null) return null;
+
+      final scopes = [gmail.GmailApi.gmailReadonlyScope];
+
+      // Try to get existing authorization first
+      Map<String, String>? headers = await user
+          .authorizationClient
+          .authorizationHeaders(scopes);
+
+      // If no existing authorization, request the scopes
+      if (headers == null) {
+        await user.authorizationClient.authorizeScopes(scopes);
+        headers = await user.authorizationClient.authorizationHeaders(scopes);
+      }
+
+      if (headers == null) return null;
+
+      final client = GoogleAuthClient(headers);
       return gmail.GmailApi(client);
     } catch (e) {
-       print('Error getting Gmail API scopes: $e');
-       return null;
+      print('Error getting Gmail API: $e');
+      return null;
     }
   }
 }

@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'core/services/auth_service.dart';
 import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
-    debugPrint('Firebase initialization warning: Please run flutterfire configure. ($e)');
+    debugPrint('Firebase initialization error: $e');
   }
+  // Initialize Google Sign-In (must be called once before any sign-in operations)
+  await AuthService().initializeGoogleSignIn();
   // Use edgeToEdge so the Flutter UI draws behind both status bar and nav bar
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

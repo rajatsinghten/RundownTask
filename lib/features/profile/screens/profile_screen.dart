@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/router/app_router.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,9 +13,24 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _gmailConnected = true;
-  bool _outlookConnected = true;
+  bool _outlookConnected = false;
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
+
+  // Pull real user info from AuthService
+  String get _displayName =>
+      AuthService().currentUser?.displayName ?? 'User';
+  String get _email =>
+      AuthService().currentUser?.email ?? 'user@example.com';
+  String get _photoUrl =>
+      AuthService().currentUser?.photoURL ?? '';
+  String get _initials {
+    final parts = _displayName.split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return _displayName.isNotEmpty ? _displayName[0].toUpperCase() : '?';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,40 +144,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Row(
           children: [
-            // Avatar
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF8CA9FF),
-                    Color(0xFF3B82F6),
-                  ],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'RS',
-                  style: GoogleFonts.workSans(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ),
+            // Avatar — show Google photo if available
+            _photoUrl.isNotEmpty
+                ? Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.network(
+                        _photoUrl,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _buildInitialsAvatar(),
+                      ),
+                    ),
+                  )
+                : _buildInitialsAvatar(),
             const SizedBox(width: 16),
             // Name, email, badge
             Expanded(
@@ -168,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Rajat Singh',
+                    _displayName,
                     style: GoogleFonts.workSans(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -178,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'rajat@rundown.app',
+                    _email,
                     style: GoogleFonts.dmMono(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -206,6 +215,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitialsAvatar() {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF8CA9FF),
+            Color(0xFF3B82F6),
+          ],
+        ),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          _initials,
+          style: GoogleFonts.workSans(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
         ),
       ),
     );
@@ -308,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildAccountTile(
               icon: Icons.mail_outline,
               name: 'Gmail',
-              detail: 'rajat.singh@gmail.com',
+              detail: _email,
               iconColor: AppColors.gmailRed,
               bgColor: AppColors.gmailBg,
               borderColor: AppColors.gmailBorder,
@@ -319,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildAccountTile(
               icon: Icons.mail_outline,
               name: 'Outlook',
-              detail: 'rajat@company.com',
+              detail: 'Not connected',
               iconColor: AppColors.outlookBlue,
               bgColor: AppColors.outlookBg,
               borderColor: AppColors.outlookBorder,
@@ -616,7 +661,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
-        onTap: () {},
+        onTap: () async {
+          await AuthService().signOut();
+          if (mounted) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRouter.login,
+              (route) => false,
+            );
+          }
+        },
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 16),

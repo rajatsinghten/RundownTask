@@ -192,17 +192,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ── Continue with Google ────────────────────────────────
                   _buildSocialButton(
                     onPressed: () async {
-                      final credential = await AuthService().signInWithGoogle();
-                      if (credential != null) {
-                        if (context.mounted) {
+                      try {
+                        final credential = await AuthService().signInWithGoogle();
+                        if (credential != null && context.mounted) {
                           Navigator.pushReplacementNamed(context, AppRouter.main);
-                        }
-                      } else {
-                        if (context.mounted) {
+                        } else if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Google Sign-In failed or was canceled.'),
+                              content: Text('Google Sign-In canceled.'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Google Sign-In Error: $e'),
                               backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 5),
                             ),
                           );
                         }
@@ -216,22 +224,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // ── Continue with Microsoft ─────────────────────────────
                   _buildSocialButton(
-                    onPressed: () async {
-                      final token = await AuthService().signInWithMicrosoft();
-                      if (token != null) {
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, AppRouter.main);
-                        }
-                      } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Microsoft Sign-In failed or was canceled.'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Microsoft Sign-In coming soon!'),
+                          backgroundColor: Color(0xFF3B82F6),
+                        ),
+                      );
                     },
                     icon: _microsoftIcon(),
                     label: 'Continue with Microsoft',
