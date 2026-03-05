@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Animated splash screen shown once at app startup.
-/// Navigates to login or main after the animation finishes.
-/// Uses its own unique route `/splash` — nothing else ever navigates here,
-/// so it can never loop.
+/// Restores the Google session while the animation plays,
+/// then navigates to login or main based on auth state.
 class SplashScreen extends StatefulWidget {
-  final bool isLoggedIn;
-  const SplashScreen({super.key, required this.isLoggedIn});
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -41,14 +41,23 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate once after animation completes + small buffer
-    Future.delayed(const Duration(milliseconds: 1500), _navigateAway);
+    // Run session restore + navigation in parallel with the animation
+    _initAndNavigate();
   }
 
-  void _navigateAway() {
+  Future<void> _initAndNavigate() async {
+    // Fire session restore — this happens while the splash animation plays
+    await AuthService().restoreSession();
+
+    // Ensure at least 1.5s of splash visibility
+    await Future.delayed(const Duration(milliseconds: 1500));
+
     if (!mounted || _navigated) return;
     _navigated = true;
-    final route = widget.isLoggedIn ? AppRouter.main : AppRouter.login;
+
+    // Check auth state AFTER session restore has completed
+    final user = FirebaseAuth.instance.currentUser;
+    final route = (user != null) ? AppRouter.main : AppRouter.login;
     Navigator.of(context).pushReplacementNamed(route);
   }
 

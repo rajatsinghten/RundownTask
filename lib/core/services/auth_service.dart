@@ -39,10 +39,9 @@ class AuthService {
   GoogleSignInAccount? get googleUser => _googleUser;
 
   /// Initialize the GoogleSignIn singleton. Call this once at app startup.
+  /// Does NOT attempt to restore any session — call [restoreSession] for that.
   Future<void> initializeGoogleSignIn() async {
     try {
-      // The serverClientId is the Web client ID from Firebase/Google Cloud Console.
-      // It's required to get the idToken for Firebase Auth on Android.
       await GoogleSignIn.instance.initialize(
         serverClientId: '741222572973-amfv89qim6eo8i3lk4hb78ngr48eu76n.apps.googleusercontent.com',
       );
@@ -55,16 +54,19 @@ class AuthService {
             _googleUser = null;
         }
       });
-      // Silently restore an existing Google session from the keychain.
-      // This does NOT trigger the sign-in UI — it only succeeds if the
-      // user previously signed in and their session is still valid.
-      try {
-        await GoogleSignIn.instance.attemptLightweightAuthentication();
-      } catch (e) {
-        print('Lightweight auth failed (expected if not previously signed in): $e');
-      }
     } catch (e) {
       print('GoogleSignIn initialization warning: $e');
+    }
+  }
+
+  /// Silently restore an existing Google session from the device keychain.
+  /// Call this AFTER the UI is visible (e.g. during the splash screen)
+  /// so any Android bottom-sheet doesn't appear on a blank screen.
+  Future<void> restoreSession() async {
+    try {
+      await GoogleSignIn.instance.attemptLightweightAuthentication();
+    } catch (e) {
+      print('Session restore skipped: $e');
     }
   }
 

@@ -35,18 +35,15 @@ class AppRouter {
     );
   }
 
-  /// Generates the splash route with fade-in (no slide).
-  static Route<dynamic> generateSplashRoute(bool isLoggedIn, RouteSettings settings) {
-    return PageRouteBuilder(
-      settings: settings,
-      transitionDuration: Duration.zero,
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          SplashScreen(isLoggedIn: isLoggedIn),
-    );
-  }
-
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case splash:
+        return PageRouteBuilder(
+          settings: settings,
+          transitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const SplashScreen(),
+        );
       case login:
         return _slideRoute(const LoginScreen(), settings);
       case main:

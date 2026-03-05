@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'core/services/auth_service.dart';
 import 'app.dart';
@@ -16,11 +15,9 @@ void main() async {
     debugPrint('Firebase initialization error: $e');
   }
 
+  // Only initialize GoogleSignIn (register listener + set client ID).
+  // Session restore happens later in the splash screen so the UI is visible.
   await AuthService().initializeGoogleSignIn();
-
-  // Read auth state once, synchronously, before the app starts.
-  // This is safe after Firebase.initializeApp().
-  final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -31,5 +28,5 @@ void main() async {
     statusBarIconBrightness: Brightness.dark,
   ));
 
-  runApp(RundownTaskApp(isLoggedIn: isLoggedIn));
+  runApp(const RundownTaskApp());
 }
