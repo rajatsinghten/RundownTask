@@ -107,44 +107,43 @@ class AuthService {
     _googleUser = null;
   }
 
-  /// Attempts to restore the Google session without full interaction.
-  Future<GoogleSignInAccount?> restoreSession() async {
-    try {
-      final future = GoogleSignIn.instance.attemptLightweightAuthentication();
-      if (future != null) {
-        _googleUser = await future;
-      }
-      return _googleUser;
-    } catch (e) {
-      print('Lightweight auth error: $e');
-      return null;
-    }
-  }
-
   /// Returns an authenticated GmailApi client for the current Google session.
   /// Will request Gmail read-only scope if not already granted.
   Future<gmail.GmailApi?> getGmailApi() async {
     try {
       var user = _googleUser;
       
-      // If no active google user in memory, try to restore the session silently
+      // If we don't have a user in memory but Firebase sees them as logged in,
+      // it means they restarted the app.
       if (user == null) {
-        user = await restoreSession();
-        if (user == null) return null;
+        if (FirebaseAuth.instance.currentUser != null) {
+            // Force a silent/interactive sign-in if we lost the Google session
+            try {
+              user = await GoogleSignIn.instance.authenticate(scopeHint: scopes);
+              _googleUser = user;
+            } catch (authError) {
+              print('Could not silently re-authenticate: $authError');
+              return null;
+            }
+        } else {
+            return null; // Not logged into Firebase either
+        }
       }
 
-      final scopes = [gmail.GmailApi.gmailReadonlyScope];
-
-      // Try to get existing authorization first
+      // Try to get existing authorization first (silently refreshes if needed)
       Map<String, String>? headers;
       try {
-        headers = await user.authorizationClient.authorizationHeaders(scopes);
+        headers = await user.authorizationClient.authorizationHeaders(scopes, promptIfNecessary: false);
       } catch (e) {
         print('Warning: Failed to get authorization headers (token may be expired): $e');
-        // If it failed, try restoring the session again to force a token refresh
-        final refreshedUser = await restoreSession();
-        if (refreshedUser != null) {
-          headers = await refreshedUser.authorizationClient.authorizationHeaders(scopes);
+      }
+
+      // If silent refresh failed, prompt the user for authorization
+      if (headers == null) {
+        try {
+          headers = await user.authorizationClient.authorizationHeaders(scopes, promptIfNecessary: true);
+        } catch (e) {
+          print('Warning: Failed to authorize scopes interactively: $e');
         }
       }
 

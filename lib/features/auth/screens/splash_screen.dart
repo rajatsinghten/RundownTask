@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/router/app_router.dart';
-import '../../../core/services/auth_service.dart';
 
 /// Animated splash screen shown once at app startup.
 /// Restores the Google session while the animation plays,
@@ -18,8 +17,6 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _controller;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
-  bool _navigated = false;
-
   @override
   void initState() {
     super.initState();
