@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/email_cache_service.dart';
 
 class InboxStreamScreen extends StatefulWidget {
   const InboxStreamScreen({super.key});
@@ -13,20 +14,53 @@ class InboxStreamScreen extends StatefulWidget {
   State<InboxStreamScreen> createState() => _InboxStreamScreenState();
 }
 
-class _InboxStreamScreenState extends State<InboxStreamScreen> {
+class _InboxStreamScreenState extends State<InboxStreamScreen>
+    with AutomaticKeepAliveClientMixin {
   List<Map<String, String>> _emails = [];
   bool _isLoading = true;
   String? _errorMessage;
+  bool _hasFetched = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _fetchEmails();
+    _loadEmails();
   }
 
-  Future<void> _fetchEmails() async {
+  /// Load emails from cache first, then fetch fresh from Gmail.
+  Future<void> _loadEmails() async {
+    // If we already fetched this session, don't re-fetch
+    if (_hasFetched) return;
+
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Try cache first for instant display
+    final cached = await EmailCacheService().getCachedEmails();
+    if (cached != null && cached.isNotEmpty) {
+      setState(() {
+        _emails = cached;
+        _isLoading = false;
+        _hasFetched = true;
+      });
+      // Still fetch fresh data in the background
+      _fetchEmailsSilently();
+      return;
+    }
+
+    // No cache — fetch from Gmail
+    await _fetchEmails();
+  }
+
+  /// Fetch from Gmail and update the UI. Called on first load or pull-to-refresh.
+  Future<void> _fetchEmails() async {
+    setState(() {
+      _isLoading = _emails.isEmpty; // Only show spinner if no cached data
       _errorMessage = null;
     });
 
@@ -41,73 +75,124 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
         return;
       }
 
-      // Fetch the latest 10 messages from the inbox
-      final messageList = await gmailApi.users.messages.list(
-        'me',
-        maxResults: 10,
-        labelIds: ['INBOX'],
-      );
+      final emailData = await _fetchFromGmailApi(gmailApi);
 
-      final messages = messageList.messages ?? [];
-      final List<Map<String, String>> emailData = [];
-
-      for (final msg in messages) {
-        try {
-          final fullMsg = await gmailApi.users.messages.get(
-            'me',
-            msg.id!,
-            format: 'metadata',
-            metadataHeaders: ['From', 'Subject', 'Date'],
-          );
-
-          final headers = fullMsg.payload?.headers ?? [];
-          String from = '';
-          String subject = '';
-          String date = '';
-
-          for (final header in headers) {
-            switch (header.name?.toLowerCase()) {
-              case 'from':
-                from = header.value ?? '';
-              case 'subject':
-                subject = header.value ?? '';
-              case 'date':
-                date = header.value ?? '';
-            }
-          }
-
-          // Parse sender name and email
-          final senderName = _parseSenderName(from);
-          final senderEmail = _parseSenderEmail(from);
-          final initials = _getInitials(senderName);
-          final timeStr = _formatTime(date);
-          final snippet = fullMsg.snippet ?? '';
-
-          emailData.add({
-            'source': 'Gmail',
-            'time': timeStr,
-            'initials': initials,
-            'subject': subject.isNotEmpty ? subject : '(No subject)',
-            'preview': snippet,
-            'senderName': senderName,
-            'senderEmail': '<$senderEmail>',
-            'messageId': msg.id ?? '',
-          });
-        } catch (e) {
-          print('Error fetching message ${msg.id}: $e');
-        }
-      }
+      // Cache the results
+      await EmailCacheService().cacheEmails(emailData);
 
       setState(() {
         _emails = emailData;
         _isLoading = false;
+        _hasFetched = true;
       });
     } catch (e) {
       print('Error fetching emails: $e');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load emails. Please try again.';
+        if (_emails.isEmpty) {
+          _errorMessage = 'Failed to load emails. Please try again.';
+        }
       });
+    }
+  }
+
+  /// Fetch fresh emails in background without showing a loading spinner.
+  Future<void> _fetchEmailsSilently() async {
+    try {
+      final gmailApi = await AuthService().getGmailApi();
+      if (gmailApi == null) return;
+
+      final emailData = await _fetchFromGmailApi(gmailApi);
+      await EmailCacheService().cacheEmails(emailData);
+
+      if (mounted) {
+        setState(() {
+          _emails = emailData;
+        });
+      }
+    } catch (e) {
+      print('Background email refresh failed: $e');
+    }
+  }
+
+  /// Core Gmail API fetch logic — returns parsed email data.
+  Future<List<Map<String, String>>> _fetchFromGmailApi(gmail.GmailApi gmailApi) async {
+    // Fetch messages from last 10 days
+    final tenDaysAgo = DateTime.now().subtract(const Duration(days: 10));
+    final afterDate = DateFormat('yyyy/MM/dd').format(tenDaysAgo);
+
+    final messageList = await gmailApi.users.messages.list(
+      'me',
+      maxResults: 20,
+      labelIds: ['INBOX'],
+      q: 'after:$afterDate',
+    );
+
+    final messages = messageList.messages ?? [];
+    final List<Map<String, String>> emailData = [];
+
+    for (final msg in messages) {
+      try {
+        final fullMsg = await gmailApi.users.messages.get(
+          'me',
+          msg.id!,
+          format: 'metadata',
+          metadataHeaders: ['From', 'Subject', 'Date'],
+        );
+
+        final headers = fullMsg.payload?.headers ?? [];
+        String from = '';
+        String subject = '';
+        String date = '';
+
+        for (final header in headers) {
+          switch (header.name?.toLowerCase()) {
+            case 'from':
+              from = header.value ?? '';
+            case 'subject':
+              subject = header.value ?? '';
+            case 'date':
+              date = header.value ?? '';
+          }
+        }
+
+        final senderName = _parseSenderName(from);
+        final senderEmail = _parseSenderEmail(from);
+        final initials = _getInitials(senderName);
+        final timeStr = _formatTime(date);
+        final snippet = fullMsg.snippet ?? '';
+        final rawDate = _parseRawDate(date);
+
+        emailData.add({
+          'source': 'Gmail',
+          'time': timeStr,
+          'initials': initials,
+          'subject': subject.isNotEmpty ? subject : '(No subject)',
+          'preview': snippet,
+          'senderName': senderName,
+          'senderEmail': '<$senderEmail>',
+          'messageId': msg.id ?? '',
+          'rawDate': rawDate,
+        });
+      } catch (e) {
+        print('Error fetching message ${msg.id}: $e');
+      }
+    }
+
+    return emailData;
+  }
+
+  /// Parse the raw date header into an ISO string for cache filtering.
+  String _parseRawDate(String dateStr) {
+    try {
+      final date = DateFormat("EEE, d MMM yyyy HH:mm:ss Z").parse(dateStr, true);
+      return date.toIso8601String();
+    } catch (_) {
+      try {
+        return DateTime.parse(dateStr).toIso8601String();
+      } catch (_) {
+        return DateTime.now().toIso8601String();
+      }
     }
   }
 
@@ -115,7 +200,6 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
   String _parseSenderName(String from) {
     if (from.contains('<')) {
       final name = from.substring(0, from.indexOf('<')).trim();
-      // Remove surrounding quotes if present
       if (name.startsWith('"') && name.endsWith('"')) {
         return name.substring(1, name.length - 1);
       }
@@ -140,7 +224,6 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
 
   String _formatTime(String dateStr) {
     try {
-      // Gmail date format: "Thu, 6 Mar 2026 10:42:00 +0530"
       final date = DateFormat("EEE, d MMM yyyy HH:mm:ss Z").parse(dateStr, true).toLocal();
       final now = DateTime.now();
       final diff = now.difference(date);
@@ -155,7 +238,6 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
         return DateFormat('MMM d').format(date);
       }
     } catch (_) {
-      // Fallback: try simpler parsing
       try {
         final date = DateTime.parse(dateStr).toLocal();
         return DateFormat('h:mm a').format(date);
@@ -167,6 +249,7 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -231,7 +314,10 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _fetchEmails,
+              onPressed: () {
+                _hasFetched = false;
+                _loadEmails();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primarySoft,
                 foregroundColor: Colors.white,
@@ -303,7 +389,10 @@ class _InboxStreamScreenState extends State<InboxStreamScreen> {
           Row(
             children: [
               IconButton(
-                onPressed: _fetchEmails,
+                onPressed: () {
+                  _hasFetched = false;
+                  _fetchEmails();
+                },
                 icon: const Icon(
                   Icons.refresh,
                   color: AppColors.textSlate400,

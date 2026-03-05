@@ -113,25 +113,26 @@ class _MainScreenState extends State<MainScreen> {
     final goingForward = _currentIndex > _previousIndex;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          // Determine direction based on key comparison
-          final isIncoming = child.key == ValueKey(_currentIndex);
-          final beginOffset = isIncoming
-              ? Offset(goingForward ? 1.0 : -1.0, 0.0)
-              : Offset(goingForward ? -1.0 : 1.0, 0.0);
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: beginOffset,
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          );
-        },
-        child: _screenForIndex(_currentIndex),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          HomeScreen(
+            key: const ValueKey(0),
+            onNavigateToTab: _navigateToTab,
+            inboxCount: _inboxCount,
+            tasks: _tasks,
+            onToggleTask: _toggleTask,
+            onAddTask: _addTask,
+          ),
+          const InboxStreamScreen(key: ValueKey(1)),
+          CalendarScreen(
+            key: const ValueKey(2),
+            tasks: _tasks,
+            onToggleTask: _toggleTask,
+            onAddTask: _addTask,
+          ),
+          const ChatbotScreen(key: ValueKey(3)),
+        ],
       ),
       bottomNavigationBar: _buildBottomNavBar(),
     );

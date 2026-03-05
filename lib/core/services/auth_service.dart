@@ -55,8 +55,14 @@ class AuthService {
             _googleUser = null;
         }
       });
-      // Removed attemptLightweightAuthentication() so it doesn't auto-prompt 
-      // the user immediately on startup.
+      // Silently restore an existing Google session from the keychain.
+      // This does NOT trigger the sign-in UI — it only succeeds if the
+      // user previously signed in and their session is still valid.
+      try {
+        await GoogleSignIn.instance.attemptLightweightAuthentication();
+      } catch (e) {
+        print('Lightweight auth failed (expected if not previously signed in): $e');
+      }
     } catch (e) {
       print('GoogleSignIn initialization warning: $e');
     }
