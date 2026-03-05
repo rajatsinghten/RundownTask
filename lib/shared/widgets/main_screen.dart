@@ -165,11 +165,11 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ),
         padding: EdgeInsets.only(
-          left: 32,
-          right: 32,
-          top: 24,
+          left: 16,
+          right: 16,
+          top: 30,
           // Add enough bottom padding to cover system nav bar on all Android devices
-          bottom: (bottomPadding > 0 ? bottomPadding : 16) + 16,
+          bottom: (bottomPadding > 0 ? bottomPadding : 16) + 20,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -211,35 +211,40 @@ class _MainScreenState extends State<MainScreen> {
     required int index,
   }) {
     final isActive = _currentIndex == index;
-    return GestureDetector(
-      onTap: () => _navigateToTab(index),
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            transform: Matrix4.translationValues(
-              0,
-              isActive ? -2 : 0,
-              0,
-            ),
-            child: Icon(
-              isActive ? activeIcon : icon,
-              size: 26,
-              color: isActive ? AppColors.primary : AppColors.textSlate400,
-            ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _navigateToTab(index),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                transform: Matrix4.translationValues(
+                  0,
+                  isActive ? -2 : 0,
+                  0,
+                ),
+                child: Icon(
+                  isActive ? activeIcon : icon,
+                  size: 26,
+                  color: isActive ? AppColors.primary : AppColors.textSlate400,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: GoogleFonts.workSans(
+                  fontSize: 10,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? AppColors.primary : AppColors.textSlate400,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.workSans(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              color: isActive ? AppColors.primary : AppColors.textSlate400,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
