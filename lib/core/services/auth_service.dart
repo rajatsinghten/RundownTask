@@ -59,8 +59,6 @@ class AuthService {
     }
   }
 
-
-
   /// Starts the Google Sign-In flow and authenticates with Firebase.
   Future<UserCredential?> signInWithGoogle() async {
     try {

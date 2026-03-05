@@ -13,7 +13,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _gmailConnected = true;
-  bool _outlookConnected = false;
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
 
@@ -359,17 +358,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderColor: AppColors.gmailBorder,
               isConnected: _gmailConnected,
               onToggle: (val) => setState(() => _gmailConnected = val),
-            ),
-            Divider(height: 1, color: AppColors.gray100),
-            _buildAccountTile(
-              icon: Icons.mail_outline,
-              name: 'Outlook',
-              detail: 'Not connected',
-              iconColor: AppColors.outlookBlue,
-              bgColor: AppColors.outlookBg,
-              borderColor: AppColors.outlookBorder,
-              isConnected: _outlookConnected,
-              onToggle: (val) => setState(() => _outlookConnected = val),
             ),
             Divider(height: 1, color: AppColors.gray100),
             _buildAddAccountTile(),

@@ -16,7 +16,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  int _previousIndex = 0;
   // Total non-archived inbox emails (matches the 4 hardcoded emails in InboxStreamScreen)
   final int _inboxCount = 4;
 
@@ -56,7 +55,6 @@ class _MainScreenState extends State<MainScreen> {
   void _navigateToTab(int index) {
     if (index == _currentIndex) return;
     setState(() {
-      _previousIndex = _currentIndex;
       _currentIndex = index;
     });
   }
@@ -81,36 +79,11 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  Widget _screenForIndex(int index) {
-    switch (index) {
-      case 0:
-        return HomeScreen(
-          key: const ValueKey(0),
-          onNavigateToTab: _navigateToTab,
-          inboxCount: _inboxCount,
-          tasks: _tasks,
-          onToggleTask: _toggleTask,
-          onAddTask: _addTask,
-        );
-      case 1:
-        return const InboxStreamScreen(key: ValueKey(1));
-      case 2:
-        return CalendarScreen(
-          key: const ValueKey(2),
-          tasks: _tasks,
-          onToggleTask: _toggleTask,
-          onAddTask: _addTask,
-        );
-      case 3:
-        return const ChatbotScreen(key: ValueKey(3));
-      default:
-        return const SizedBox.shrink();
-    }
-  }
+
+
 
   @override
   Widget build(BuildContext context) {
-    final goingForward = _currentIndex > _previousIndex;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(

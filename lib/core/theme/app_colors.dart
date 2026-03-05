@@ -26,9 +26,8 @@ class AppColors {
   static const Color gmailRed = Color(0xFFEA4335);
   static const Color gmailBg = Color(0xFFFEF2F2);
   static const Color gmailBorder = Color(0xFFFECACA);
-  static const Color outlookBlue = Color(0xFF0078D4);
-  static const Color outlookBg = Color(0xFFEFF6FF);
-  static const Color outlookBorder = Color(0xFFBFDBFE);
+
+
 
   // Borders & Surfaces
   static const Color borderLight = Color(0xFFF3F4F6);

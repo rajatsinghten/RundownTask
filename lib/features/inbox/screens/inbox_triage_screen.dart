@@ -174,9 +174,7 @@ class InboxTriageScreen extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: source == 'Gmail'
-                                ? AppColors.gmailBg
-                                : AppColors.outlookBg,
+                            color: AppColors.gmailBg,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -184,9 +182,7 @@ class InboxTriageScreen extends StatelessWidget {
                             style: GoogleFonts.workSans(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: source == 'Gmail'
-                                  ? AppColors.gmailRed
-                                  : AppColors.outlookBlue,
+                              color: AppColors.gmailRed,
                               letterSpacing: 0.5,
                             ),
                           ),

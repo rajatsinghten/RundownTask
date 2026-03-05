@@ -52,3 +52,11 @@ app.*.map.json
 /android/.gradle/
 /ios/Pods/
 /macos/Pods/
+
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+
+# Design mockups (not needed in builds)
+/design/
