@@ -3,10 +3,12 @@ import '../../shared/widgets/main_screen.dart';
 import '../../features/inbox/screens/inbox_triage_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/splash_screen.dart';
 
 class AppRouter {
   AppRouter._();
 
+  static const String splash = '/splash';
   static const String login = '/login';
   static const String main = '/';
   static const String inboxTriage = '/inbox-triage';
@@ -30,6 +32,16 @@ class AppRouter {
           child: child,
         );
       },
+    );
+  }
+
+  /// Generates the splash route with fade-in (no slide).
+  static Route<dynamic> generateSplashRoute(bool isLoggedIn, RouteSettings settings) {
+    return PageRouteBuilder(
+      settings: settings,
+      transitionDuration: Duration.zero,
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          SplashScreen(isLoggedIn: isLoggedIn),
     );
   }
 

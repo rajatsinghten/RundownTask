@@ -3,7 +3,9 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 
 class RundownTaskApp extends StatelessWidget {
-  const RundownTaskApp({super.key});
+  final bool isLoggedIn;
+
+  const RundownTaskApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -11,8 +13,14 @@ class RundownTaskApp extends StatelessWidget {
       title: 'Rundown Task',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppRouter.login,
-      onGenerateRoute: AppRouter.generateRoute,
+      initialRoute: AppRouter.splash,
+      onGenerateRoute: (settings) {
+        // Inject isLoggedIn into the splash route
+        if (settings.name == AppRouter.splash) {
+          return AppRouter.generateSplashRoute(isLoggedIn, settings);
+        }
+        return AppRouter.generateRoute(settings);
+      },
     );
   }
 }

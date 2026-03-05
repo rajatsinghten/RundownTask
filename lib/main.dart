@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'core/services/auth_service.dart';
 import 'app.dart';
@@ -14,17 +15,21 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
-  // Initialize Google Sign-In (must be called once before any sign-in operations)
+
   await AuthService().initializeGoogleSignIn();
-  // Use edgeToEdge so the Flutter UI draws behind both status bar and nav bar
+
+  // Read auth state once, synchronously, before the app starts.
+  // This is safe after Firebase.initializeApp().
+  final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
+
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    // Match the white nav bar so that the system bar area looks part of the app
     systemNavigationBarColor: Color(0xFFFFFFFF),
     systemNavigationBarDividerColor: Colors.transparent,
     systemNavigationBarIconBrightness: Brightness.dark,
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
-  runApp(const RundownTaskApp());
+
+  runApp(RundownTaskApp(isLoggedIn: isLoggedIn));
 }

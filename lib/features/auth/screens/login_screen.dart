@@ -53,18 +53,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // ── Logo ────────────────────────────────────────────────
                   Center(
-                    child: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Rundown',
-                            style: GoogleFonts.workSans(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1A1A1A),
-                            ),
-                          ),
-                        ],
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/Logo.jpeg',
+                        width: 88,
+                        height: 88,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      'Rundown',
+                      style: GoogleFonts.workSans(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF1A1A1A),
                       ),
                     ),
                   ),
@@ -220,22 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'Continue with Gmail',
                   ),
 
-                  const SizedBox(height: 12),
-
-                  // ── Continue with Microsoft ─────────────────────────────
-                  _buildSocialButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Microsoft Sign-In coming soon!'),
-                          backgroundColor: Color(0xFF3B82F6),
-                        ),
-                      );
-                    },
-                    icon: _microsoftIcon(),
-                    label: 'Continue with Microsoft',
-                  ),
-
                   const SizedBox(height: 32),
 
                   // ── Sign Up Link ────────────────────────────────────────
@@ -370,40 +360,4 @@ class _LoginScreenState extends State<LoginScreen> {
           const Icon(Icons.g_mobiledata, color: Color(0xFFEA4335), size: 26),
     );
   }
-
-  Widget _microsoftIcon() {
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(painter: _MicrosoftLogoPainter()),
-    );
-  }
 }
-
-class _MicrosoftLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final gap = size.width * 0.09;
-    final sq = (size.width - gap) / 2;
-    final colors = [
-      const Color(0xFFF25022), // top-left  red
-      const Color(0xFF7FBA00), // top-right green
-      const Color(0xFF00A4EF), // bottom-left blue
-      const Color(0xFFFFB900), // bottom-right yellow
-    ];
-    final rects = [
-      Rect.fromLTWH(0, 0, sq, sq),
-      Rect.fromLTWH(sq + gap, 0, sq, sq),
-      Rect.fromLTWH(0, sq + gap, sq, sq),
-      Rect.fromLTWH(sq + gap, sq + gap, sq, sq),
-    ];
-    final paint = Paint()..style = PaintingStyle.fill;
-    for (int i = 0; i < 4; i++) {
-      canvas.drawRect(rects[i], paint..color = colors[i]);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
