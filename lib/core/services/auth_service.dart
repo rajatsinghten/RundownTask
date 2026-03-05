@@ -59,16 +59,7 @@ class AuthService {
     }
   }
 
-  /// Silently restore an existing Google session from the device keychain.
-  /// Call this AFTER the UI is visible (e.g. during the splash screen)
-  /// so any Android bottom-sheet doesn't appear on a blank screen.
-  Future<void> restoreSession() async {
-    try {
-      await GoogleSignIn.instance.attemptLightweightAuthentication();
-    } catch (e) {
-      print('Session restore skipped: $e');
-    }
-  }
+
 
   /// Starts the Google Sign-In flow and authenticates with Firebase.
   Future<UserCredential?> signInWithGoogle() async {
