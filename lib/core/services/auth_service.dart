@@ -107,24 +107,55 @@ class AuthService {
     _googleUser = null;
   }
 
+  /// Attempts to restore the Google session without full interaction.
+  Future<GoogleSignInAccount?> restoreSession() async {
+    try {
+      final future = GoogleSignIn.instance.attemptLightweightAuthentication();
+      if (future != null) {
+        _googleUser = await future;
+      }
+      return _googleUser;
+    } catch (e) {
+      print('Lightweight auth error: $e');
+      return null;
+    }
+  }
+
   /// Returns an authenticated GmailApi client for the current Google session.
   /// Will request Gmail read-only scope if not already granted.
   Future<gmail.GmailApi?> getGmailApi() async {
     try {
-      final user = _googleUser;
-      if (user == null) return null;
+      var user = _googleUser;
+      
+      // If no active google user in memory, try to restore the session silently
+      if (user == null) {
+        user = await restoreSession();
+        if (user == null) return null;
+      }
 
       final scopes = [gmail.GmailApi.gmailReadonlyScope];
 
       // Try to get existing authorization first
-      Map<String, String>? headers = await user
-          .authorizationClient
-          .authorizationHeaders(scopes);
-
-      // If no existing authorization, request the scopes
-      if (headers == null) {
-        await user.authorizationClient.authorizeScopes(scopes);
+      Map<String, String>? headers;
+      try {
         headers = await user.authorizationClient.authorizationHeaders(scopes);
+      } catch (e) {
+        print('Warning: Failed to get authorization headers (token may be expired): $e');
+        // If it failed, try restoring the session again to force a token refresh
+        final refreshedUser = await restoreSession();
+        if (refreshedUser != null) {
+          headers = await refreshedUser.authorizationClient.authorizationHeaders(scopes);
+        }
+      }
+
+      // If no existing authorization, request the scopes (may show UI popup)
+      if (headers == null) {
+        try {
+          await user.authorizationClient.authorizeScopes(scopes);
+          headers = await user.authorizationClient.authorizationHeaders(scopes);
+        } catch (e) {
+          print('Warning: Failed to authorize scopes: $e');
+        }
       }
 
       if (headers == null) return null;

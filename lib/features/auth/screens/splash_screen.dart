@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Animated splash screen shown once at app startup.
 /// Restores the Google session while the animation plays,
@@ -47,9 +48,6 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _initAndNavigate() async {
     // Wait for the splash animation to finish
     await Future.delayed(const Duration(milliseconds: 1500));
-
-    if (!mounted || _navigated) return;
-    _navigated = true;
 
     // Check Firebase auth state
     final user = FirebaseAuth.instance.currentUser;
